@@ -32,7 +32,7 @@ if not os.path.exists(os.path.dirname(test_report)):
 results = pd.read_excel(xls_path)
 
 # Set headers and intialize an empty data frame
-headers = ["Conditions", "Logs", "f [Hz]", f"SG [{chr(176)}C]", f"DG [{chr(176)}C]", f"SSH [{chr(176)}C]", "Duty [kW]", "Flow rate [m3/h]", "IE [%]", "VE [%]", "COP [-]"]
+headers = ["Conditions", "Logs", "f [Hz]", "VR", f"SG [{chr(176)}C]", f"DG [{chr(176)}C]", f"SSH [{chr(176)}C]", "Duty [kW]", "Flow rate [m3/h]", "IE [%]", "VE [%]", "COP [-]"]
 output_df = pd.DataFrame(columns = headers)
 #print(output_df.head())
 
@@ -41,13 +41,14 @@ with open(logsheet,'r') as testlog:
     for line in testlog:
         single_logs = line.split("-")
         # Initialize dictionary with average values
-        averaged_results = {"freq": 0, "Duty": 0, "Flow rate": 0, "SG": 0, "DG": 0, "SSH": 0, "IE": 0, "VE": 0, "COP":0}
+        averaged_results = {"freq": 0, "VR": 1.6, "Duty": 0, "Flow rate": 0, "SG": 0, "DG": 0, "SSH": 0, "IE": 0, "VE": 0, "COP":0}
         print(f"Processing logs: {single_logs}")
         for entry in single_logs:
             log = int(entry)
             # Get test data and add to dict
             Conditions = results.loc[3, log]
             averaged_results["freq"] += results.loc[446, log]
+            averaged_results["VR"] = results.loc[19, log]
             averaged_results["Duty"] += results.loc[249, log]
             averaged_results["Flow rate"] += results.loc[240, log]
             averaged_results["SG"] += results.loc[30, log]
@@ -59,7 +60,7 @@ with open(logsheet,'r') as testlog:
            
         # Average data
         for val in averaged_results:
-            if val != "Conditions":
+            if val != "Conditions" and val!= "VR":
                 averaged_results[val] = averaged_results[val] / len(single_logs)
             
         # Compile string for conditons
@@ -69,6 +70,7 @@ with open(logsheet,'r') as testlog:
         output_df = output_df.append({"Conditions": test_conditions,
                                         "Logs": line.strip('\n'),
                                         "f [Hz]": int(averaged_results["freq"] + 0.5),
+                                        "VR": round(averaged_results['VR'], 1),
                                         f"SG [{chr(176)}C]": averaged_results['SG'],
                                         f"DG [{chr(176)}C]": averaged_results['DG'],
                                         f"SSH [{chr(176)}C]": averaged_results["SSH"],
@@ -88,7 +90,7 @@ with pd.ExcelWriter(test_report) as writer:
     output_df.to_excel(writer, sheet_name='Summary', startrow=1, startcol=1)
 
     # Add test log to the report
-    results.to_excel(writer, sheet_name='Test_log', startrow=1, startcol=1)
+    results.to_excel(writer, sheet_name='Test_log', startrow=0, startcol=0)
     print("Writing finished")      
 
 # Print the output dataframe

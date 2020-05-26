@@ -19,26 +19,47 @@ from datetime import date
 
 print("Libraries imported\n")
 
+# Define value class
+class TestValue:
+   def __init__(self, coordinate, val):
+      self.coordinate = coordinate
+      self.val = val
+
 # Set entries and labels
 root = Tk() 
-ent1 = Entry(root, font=40)
-ent1.grid(row=1, column=2)
-label1 = Label(root, text="Test data: ")
-label1.grid(row=1, column=1, padx=10, pady=10)
-ent2 = Entry(root, font=40)
-ent2.grid(row=2, column=2)
-label2 = Label(root, text="Logsheet: ")
-label2.grid(row=2, column=1, padx=10, pady=10)
-ent3 = Entry(root, font=40)
-ent3.grid(row=3, column=2)
-label3 = Label(root, text="Report destination: ")
-label3.grid(row=3, column=1, padx=10, pady=10)
+path_group = LabelFrame(root, text="Input Files and Report Destination")
+path_group.grid(row=1, column=1, padx=15, pady=15, sticky=W)
+ent1 = Entry(path_group, font=40)
+ent1.grid(row=2, column=2)
+label1 = Label(path_group, text="Test data: ")
+label1.grid(row=2, column=1, padx=10, pady=10, sticky=W)
+ent2 = Entry(path_group, font=40)
+ent2.grid(row=3, column=2)
+label2 = Label(path_group, text="Logsheet: ")
+label2.grid(row=3, column=1, padx=10, pady=10, sticky=W)
+ent3 = Entry(path_group, font=40)
+ent3.grid(row=4, column=2)
+label3 = Label(path_group, text="Report destination: ")
+label3.grid(row=4, column=1, padx=10, pady=10, sticky=W)
 # Rig selection
+rig_group = LabelFrame(root, text="Rig Selection")
+rig_group.grid(row=2, column=1, padx=15, pady=15, sticky=W)
 rig = StringVar()
-R1 = Radiobutton(root, text="F5 Rig", variable=rig, value="F5")
-R1.grid(row=4, column=1, padx=10, pady=10)
-R2 = Radiobutton(root, text="Yellow Rig", variable=rig, value="yellow")
-R2.grid(row=4, column=2, padx=10, pady=10)
+R1 = Radiobutton(rig_group, text="F5 Rig", variable=rig, value="F5")
+R1.grid(row=5, column=1, padx=10, pady=10, sticky=W)
+R2 = Radiobutton(rig_group, text="Yellow Rig", variable=rig, value="yellow")
+R2.grid(row=5, column=2, padx=10, pady=10, sticky=W)
+# Report data selection
+rep_group = LabelFrame(root, text="Report format")
+rep_group.grid(row=3, column=1, padx=15, pady=15, sticky=W)
+repVals = StringVar()
+R3 = Radiobutton(rep_group, text="Standard", variable=repVals, value='standard')
+R3.grid(row=6, column=1, padx=10, pady=10, sticky=W)
+R4 = Radiobutton(rep_group, text="Custom", variable=repVals, value='custom', command = lambda:custom_report())
+R4.grid(row=6, column=2, padx=10, pady=10, sticky=W)
+R5 = Radiobutton(rep_group, text="From Template", variable=repVals, value='template')
+R5.grid(row=6, column=3, padx=10, pady=10, sticky=W)
+
 
 # Set relative path to test log and logsheet
 #xls_path = "LOGall-fullycond.xls"
@@ -90,6 +111,64 @@ def open_logsheet():
    with open(logfile,'r') as testlog:
       ent2.insert(END, logfile)
 
+# Define custom report function:
+def custom_report():
+   if rig.get() =='F5':
+      # Load params based on F5 test data format
+      test_results = ent1.get()
+      test_data_df = pd.read_excel(test_results)
+      df_shape = test_data_df.shape
+      possible_headers = {}
+      report_format = {'headers': [], 'averaged_results': {}}
+      for i in range(1, df_shape[0]):
+         # Define unit:
+         unit = ''
+         if type(test_data_df.iloc[i, 1]) == float:
+            unit = "[-]"
+         else:
+            unit = f"[{test_data_df.iloc[i, 1]}]"
+         possible_headers[i] = {'param': f"[{i}] {test_data_df.iloc[i, 0]} {unit}", 'unit': unit, 'coordinate': i}
+      param_group = LabelFrame(rep_group, text="Select the Report Parameters:")
+      param_group.grid(row=7, column=1, padx=10, pady=10, columnspan=3, sticky=W)
+      # for scrolling vertically 
+      yscrollbar = Scrollbar(param_group) 
+      yscrollbar.grid(row=1, column=4, rowspan=10, sticky=E)
+      global param_list
+      param_list = Listbox(param_group, selectmode = "multiple",  
+               yscrollcommand = yscrollbar.set)
+      # Widget expands horizontally and  
+      # vertically by assigning both to 
+      # fill option 
+      param_list.grid(row=1, column=1, padx = 10, pady = 10, rowspan=4, columnspan=10, sticky=W)   
+      for h in possible_headers:
+         param_list.insert(END, possible_headers[h]["param"])
+      # Attach listbox to vertical scrollbar 
+      yscrollbar.config(command = param_list.yview) 
+   
+   #elif rig.get() == 'yellow':
+      # Load params based on Yellow rig test data format
+
+# Define function to get parameters from the test data and creat report dataframe
+def make_report_df():
+   report_type = repVals.get()
+   rep = {'headers': [], 'averaged_results': {}}
+   if report_type == 'standard':
+      rep = {'headers': ["Conditions", "Logs", "f [Hz]", "PR", "VR", f"SG [{chr(176)}C]", f"DG [{chr(176)}C]", f"SSH [{chr(176)}C]", "Duty [kW]", "Flow rate [m3/h]", "IE [%]", "VE [%]", "COP [-]"],
+             'averaged_results': {"freq": 0, "PR": 1, "VR": 1.6, "Duty": 0, "Flow rate": 0, "SG": 0, "DG": 0, "SSH": 0, "IE": 0, "VE": 0, "COP":0}}
+      return rep
+   elif report_type == 'custom':
+      selection = param_list.curselection()
+      print(selection)
+      for e in selection:
+         selected = param_list.get(e)
+         rep["headers"].append(selected[5:])
+         val_end = selected[5:].find('[') + 4
+         rep["averaged_results"][f"{selected[5:val_end]}"] = TestValue(int(selected[1]), 0)
+      return rep
+   elif report_type == 'template':
+      rep = list.get()
+      return rep
+
 def make_F5_report():
    # Get entries
    test_results = ent1.get()
@@ -99,6 +178,7 @@ def make_F5_report():
    headers = ["Conditions", "Logs", "f [Hz]", "PR", "VR", f"SG [{chr(176)}C]", f"DG [{chr(176)}C]", f"SSH [{chr(176)}C]", "Duty [kW]", "Flow rate [m3/h]", "IE [%]", "VE [%]", "COP [-]"]
    output_df = pd.DataFrame(columns = headers)
    print(f"Report made from following files:\nF5 test log: {test_results}\nLogsheet: {logsheet}")
+   print(make_report_df())
    # Read the log file
    results = pd.read_excel(test_results)
    with open(logsheet,'r') as testlog:
@@ -259,20 +339,20 @@ style.map("C.TButton",
     ) 
 
 # Define button to select test data
-test_data_btn = Button(root, text ='Select test data', style="C.TButton", command = lambda:open_results()) 
-test_data_btn.grid(row=1,column=3, padx=10, pady=10)
+test_data_btn = Button(path_group, text ='Select test data', style="C.TButton", command = lambda:open_results()) 
+test_data_btn.grid(row=2,column=3, padx=10, pady=10)
 
 # Define button to select log sheet
-logsheet_btn = Button(root, text ='Select Logsheet', style="C.TButton", command = lambda:open_logsheet())
-logsheet_btn.grid(row=2,column=3, padx=10, pady=10)
+logsheet_btn = Button(path_group, text ='Select Logsheet', style="C.TButton", command = lambda:open_logsheet())
+logsheet_btn.grid(row=3,column=3, padx=10, pady=10)
 
 # Define button to select report destination folder
-report_dest_btn = Button(root, text='Browse', style="C.TButton", command = lambda:select_report_destination())
-report_dest_btn.grid(row=3, column=3, padx=10, pady=10)
+report_dest_btn = Button(path_group, text='Browse', style="C.TButton", command = lambda:select_report_destination())
+report_dest_btn.grid(row=4, column=3, padx=10, pady=10)
 
 # Define button to generate the report
 make_btn = Button(root, text ='Make report', style="C.TButton", command = lambda:make_report())
-make_btn.grid(row=5,column=1, padx=10, pady=10)
+make_btn.grid(row=8,column=1, padx=10, pady=10, sticky=W)
 
 # Temporary rig button
 #rig_btn = Button(root, text ='Detect Rig', style="C.TButton", command = lambda:detect_rig())
@@ -280,6 +360,6 @@ make_btn.grid(row=5,column=1, padx=10, pady=10)
 
 # Define button to close/terminate the program
 cancel_btn = Button(root, text="Close", style="C.TButton", command = lambda:close_window())
-cancel_btn.grid(row=5, column=3, padx=10, pady=10)
+cancel_btn.grid(row=8, column=3, padx=10, pady=10, sticky=W)
 
 mainloop() 

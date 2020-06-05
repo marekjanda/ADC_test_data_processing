@@ -19,9 +19,10 @@ from datetime import date
 
 print("Libraries imported\n")
 
-# Define value class
+# Define value class to locate and store value from test results dataframe
 class TestValue:
-   def __init__(self, coordinate, val):
+   def __init__(self, name, coordinate, val):
+      self.name = name
       self.coordinate = coordinate
       self.val = val
 
@@ -163,10 +164,11 @@ def make_report_df():
          selected = param_list.get(e)
          rep["headers"].append(selected[5:])
          val_end = selected[5:].find('[') + 4
-         rep["averaged_results"][f"{selected[5:val_end]}"] = TestValue(int(selected[1]), 0)
+         parameter = TestValue(name=f"{selected[5:val_end]}", coordinate=int(selected[1]), val=0)
+         rep["averaged_results"][parameter.name] = parameter
       return rep
    elif report_type == 'template':
-      rep = list.get()
+      rep = {'status': 'Comming Soon'}
       return rep
 
 def make_F5_report():

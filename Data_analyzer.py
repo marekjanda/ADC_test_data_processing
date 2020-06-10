@@ -133,30 +133,40 @@ def custom_report():
          possible_headers[i] = {'param': f"[{i}] {test_data_df.iloc[i, 0]} {unit}", 'unit': unit, 'coordinate': i}
       #param_group = LabelFrame(rep_group, text="Select the Report Parameters:")
       #param_group.grid(row=7, column=1, padx=10, pady=10, columnspan=3, sticky=W)
-      
-      # for scrolling vertically 
-      yscrollbar = Scrollbar(rep_group) 
-      yscrollbar.grid(row=7, column=4, rowspan=5, sticky=E+N+S)
-
-      global param_list
-      param_list = Listbox(rep_group, selectmode = "multiple", yscrollcommand = yscrollbar.set)
-      
-      
-      # Widget expands horizontally and  
-      # vertically by assigning both to 
-      # fill option 
-      param_list.grid(row=7, column=0, padx = 10, pady = 10, rowspan=5, columnspan=4, sticky=W+E+N+S)   
-      for h in possible_headers:
-         param_list.insert(END, possible_headers[h]["param"])
-      # Attach listbox to vertical scrollbar 
-      yscrollbar.config(command = param_list.yview) 
    
-   #elif rig.get() == 'yellow':
+   elif rig.get() == 'yellow':
       # Load params based on Yellow rig test data format
+      test_results = ent1.get()
+      test_data_df = pd.read_csv(test_results, encoding='latin1') 
+      df_shape = test_data_df.shape
+      possible_headers = {}
+      # Create possible headers dict where each key represents a row in df
+      for i in range(1, df_shape[0]):
+         # Define name and unit:
+         name = f"{test_data_df.iloc[i, 0]}"
+         unit = f"[{test_data_df.iloc[i, 1]}]"
+         # Append to possible_headers
+         possible_headers[i] = {'param': f"{name} {unit}", 'unit': unit, 'coordinate': i}
+
+   # for scrolling vertically 
+   yscrollbar = Scrollbar(rep_group) 
+   yscrollbar.grid(row=7, column=4, rowspan=5, sticky=E+N+S)
+
+   global param_list
+   param_list = Listbox(rep_group, selectmode = "multiple", yscrollcommand = yscrollbar.set)
+      
+      
+   # Widget expands horizontally and  
+   # vertically by assigning both to 
+   # fill option 
+   param_list.grid(row=7, column=0, padx = 10, pady = 10, rowspan=5, columnspan=4, sticky=W+E+N+S)   
+   for h in possible_headers:
+      param_list.insert(END, possible_headers[h]["param"])
+   # Attach listbox to vertical scrollbar 
+   yscrollbar.config(command = param_list.yview) 
 
 # Define function to get parameters from the test data and creat report dataframe
-def make_report_df():
-   report_type = repVals.get()
+def make_F5_report_df(report_type):   
    if report_type == 'standard':
       rep = {'headers': ["Conditions", "Logs", "f [Hz]", "PR", "VR", f"SG [{chr(176)}C]", f"DG [{chr(176)}C]", f"SSH [{chr(176)}C]", "Duty [kW]", "Flow rate [m3/h]", "IE [%]", "VE [%]", "COP [-]"],
              'averaged_results': {
@@ -175,7 +185,7 @@ def make_report_df():
                   "COP [-]": TestValue(name="COP [-]", coordinate=452, val=0)}}         # averaged_results["COP"] += results.loc[452, log]
       return rep
    elif report_type == 'custom':
-      rep = {'headers': ["Logs"], 'averaged_results': {"Logs": ""}}
+      rep = {'headers': ["Conditions", "Logs"], 'averaged_results': {"Conditions": "", "Logs": ""}}
       selection = param_list.curselection()
       print(selection)
       for e in selection:
@@ -188,6 +198,38 @@ def make_report_df():
    elif report_type == 'template':
       rep = {'status': 'Comming Soon'}
       return rep
+
+def make_yellow_report_df(report_type):
+   if report_type == 'standard':
+      # 'Conditions' not available in yellow rig test data
+      rep = {'headers': ["Logs", "f [Hz]", "PR", "VR", f"SG [{chr(176)}C]", f"DG [{chr(176)}C]", f"SSH [{chr(176)}C]", "Duty [kW]", "Flow rate [m3/h]", "IE [%]", "VE [%]", "COP [-]"],
+             'averaged_results': {
+                "Logs": "",
+                "f [Hz]": TestValue(name="f [Hz]", coordinate=68, val=0) ,                         #averaged_results["freq"] += float(results.loc[68, log])
+                "PR": TestValue(name="PR", coordinate=23, val=0),                                  #averaged_results["PR"] = float(results.loc[23, log])
+                "VR": TestValue(name="VR", coordinate=7, val=0),                                   #averaged_results["VR"] = float(results.loc[7, log])
+                f"SG [{chr(176)}C]": TestValue(name=f"SG [{chr(176)}C]", coordinate=13, val=0),    #averaged_results["SG"] += float(results.loc[13, log]) 
+                f"DG [{chr(176)}C]": TestValue(name=f"DG [{chr(176)}C]", coordinate=17, val=0),    #averaged_results["DG"] += float(results.loc[17, log])
+                f"SSH [{chr(176)}C]": TestValue(name=f"SSH [{chr(176)}C]", coordinate=15, val=0),  #averaged_results["SSH"] += float(results.loc[15, log])
+                "Duty [kW]": TestValue(name="Duty [kW]", coordinate=59, val=0),                    #averaged_results["Duty"] += float(results.loc[59, log])
+                "Flow rate [m3/h]": TestValue(name="Flow rate [m3/h]", coordinate=31, val=0),      #averaged_results["Flow rate"] += float(results.loc[31, log])                            
+                "IE [%]": TestValue(name="IE [%]", coordinate=46, val=0),                          #averaged_results["IE"] += float(results.loc[46, log])
+                "VE [%]": TestValue(name="VE [%]", coordinate=45, val=0),                          #averaged_results["VE"] += float(results.loc[45, log])
+                "COP [-]": TestValue(name="COP [-]", coordinate=62, val=0)}}                        #averaged_results["COP"] += float(results.loc[62, log])
+      return rep
+   elif report_type == 'custom':
+      rep = {'status': 'Comming Soon'}
+      return rep
+   elif report_type == 'template':
+      rep = {'status': 'Comming Soon'}
+      return rep
+
+def make_report_df():
+   report_type = repVals.get()
+   if rig.get() == "F5":
+      return make_F5_report_df(report_type)
+   elif rig.get() == "yellow":
+      return make_yellow_report_df(report_type)
 
 def make_F5_report():
    # Get entries
@@ -275,61 +317,45 @@ def make_yellow_report():
    test_report = ent3.get()
    print("Yellow rig report preparing")
    # Set headers and intialize an empty data frame
-   headers = ["Conditions", "Logs", "f [Hz]", "PR", "VR", f"SG [{chr(176)}C]", f"DG [{chr(176)}C]", f"SSH [{chr(176)}C]", "Duty [kW]", "Flow rate [m3/h]", "IE [%]", "VE [%]", "COP [-]"]
+   target_df = make_report_df()
+   headers = target_df['headers']
    output_df = pd.DataFrame(columns = headers)
    print(f"Report made from following files:\nF5 test log: {test_results}\nLogsheet: {logsheet}")
    # Read the log file
    results = pd.read_csv(test_results, encoding='latin1')
+   # Define list of data which have string value, based on yellow rig report
+   string_keys = ['Date of log', 'Model number', 'Serial Number', 'Tester', 'Compressor Size', 'Motor', 'Economised or Non-Economised']
    with open(logsheet,'r') as testlog:
       for line in testlog:
          single_logs = line.split("-")
-         # Initialize dictionary with average values
-         averaged_results = {"freq": 0, "PR": 1, "VR": 1.6, "Duty": 0, "Flow rate": 0, "SG": 0, "DG": 0, "SSH": 0, "IE": 0, "VE": 0, "COP":0}
-         print(f"Processing logs: {single_logs}")
+         averaged_results = deepcopy(target_df['averaged_results'])
+         averaged_results["Logs"] =  TestValue(name="Logs", coordinate=-1, val=line.strip("\n"))
          for entry in single_logs:
             log = entry.strip('\n')
             # Get test data and add to dict
-            #Conditions = results.loc[3, log]
-            averaged_results["freq"] += float(results.loc[68, log])
-            averaged_results["PR"] = float(results.loc[23, log])
-            averaged_results["VR"] = float(results.loc[7, log])
-            averaged_results["Duty"] += float(results.loc[59, log])
-            averaged_results["Flow rate"] += float(results.loc[31, log])
-            averaged_results["SG"] += float(results.loc[13, log])
-            averaged_results["DG"] += float(results.loc[17, log])
-            averaged_results["SSH"] += float(results.loc[15, log])            
-            averaged_results["IE"] += float(results.loc[46, log])
-            averaged_results["VE"] += float(results.loc[45, log])
-            averaged_results["COP"] += float(results.loc[62, log])
+            #log = int(entry)
+            for key in averaged_results:
+               if key != "Logs":
+                  param = averaged_results[key]
+                  coordinate = int(param.coordinate)
+                  if key in string_keys:
+                     averaged_results[key].val = results.loc[coordinate, log]
+                  else:
+                     averaged_results[key].val += float(results.loc[coordinate, log])
             
-         # Average data
-         for val in averaged_results:
-            if val != "Conditions" and val != "VR" and val != "PR":
-               averaged_results[val] = averaged_results[val] / len(single_logs)
+         # Average data and replace testValue object in averaged_results with values ()
+         for key in averaged_results:
+            if type(averaged_results[key].val) is not str:
+               averaged_results[key] = averaged_results[key].val / len(single_logs)
+            else:
+               averaged_results[key] = averaged_results[key].val
             
          # Compile string for conditons
-         test_conditions = f"{round(averaged_results['SG'], 1)} / {round(averaged_results['DG'], 1)} @ {int(averaged_results['freq'] + 0.5)} Hz"
+         #test_conditions = f"{round(averaged_results['SG'], 1)} / {round(averaged_results['DG'], 1)} @ {int(averaged_results['freq'] + 0.5)} Hz"
 
          # Add results to output dataframe
-         output_df = output_df.append({"Conditions": test_conditions,
-                                        "Logs": line.strip('\n'),
-                                        "f [Hz]": int(averaged_results["freq"] + 0.5),
-                                        "PR": round(averaged_results['PR'], 1),
-                                        "VR": round(averaged_results['VR'], 1),
-                                        f"SG [{chr(176)}C]": averaged_results['SG'],
-                                        f"DG [{chr(176)}C]": averaged_results['DG'],
-                                        f"SSH [{chr(176)}C]": averaged_results["SSH"],
-                                        "Duty [kW]": averaged_results["Duty"],
-                                        "Flow rate [m3/h]": averaged_results["Flow rate"],
-                                        "IE [%]": averaged_results["IE"],
-                                        "VE [%]": averaged_results["VE"],
-                                        "COP [-]": averaged_results["COP"]}, ignore_index=True)
-
-         # Print results
-         print("Conditions: " + test_conditions)
-         print(f" SG = {round(averaged_results['SG'], 2)}\n DG = {round(averaged_results['DG'], 2)}\n SSH = {round(averaged_results['SSH'], 2)}\n Duty = {round(averaged_results['Duty'], 2)} kW\n Flow rate = {round(averaged_results['Flow rate'], 2)} m3/h\n IE = {round(averaged_results['IE'], 2)} %\n VE = {round(averaged_results['VE'], 2)} %\n COP = {round(averaged_results['COP'], 3)}\n")
-
-
+         output_df = output_df.append(averaged_results, ignore_index=True)
+         
    with pd.ExcelWriter(test_report) as writer:    
       # Write the dataframe into test report excel file
       output_df.to_excel(writer, sheet_name='Summary', startrow=1, startcol=1, index=False)

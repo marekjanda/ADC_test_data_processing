@@ -131,18 +131,21 @@ def custom_report():
          else:
             unit = f"[{test_data_df.iloc[i, 1]}]"
          possible_headers[i] = {'param': f"[{i}] {test_data_df.iloc[i, 0]} {unit}", 'unit': unit, 'coordinate': i}
-      param_group = LabelFrame(rep_group, text="Select the Report Parameters:")
-      param_group.grid(row=7, column=1, padx=10, pady=10, columnspan=3, sticky=W)
+      #param_group = LabelFrame(rep_group, text="Select the Report Parameters:")
+      #param_group.grid(row=7, column=1, padx=10, pady=10, columnspan=3, sticky=W)
+      
       # for scrolling vertically 
-      yscrollbar = Scrollbar(param_group) 
-      yscrollbar.grid(row=1, column=4, rowspan=10, sticky=E)
+      yscrollbar = Scrollbar(rep_group) 
+      yscrollbar.grid(row=7, column=4, rowspan=5, sticky=E+N+S)
+
       global param_list
-      param_list = Listbox(param_group, selectmode = "multiple",  
-               yscrollcommand = yscrollbar.set)
+      param_list = Listbox(rep_group, selectmode = "multiple", yscrollcommand = yscrollbar.set)
+      
+      
       # Widget expands horizontally and  
       # vertically by assigning both to 
       # fill option 
-      param_list.grid(row=1, column=1, padx = 10, pady = 10, rowspan=4, columnspan=10, sticky=W)   
+      param_list.grid(row=7, column=0, padx = 10, pady = 10, rowspan=5, columnspan=4, sticky=W+E+N+S)   
       for h in possible_headers:
          param_list.insert(END, possible_headers[h]["param"])
       # Attach listbox to vertical scrollbar 

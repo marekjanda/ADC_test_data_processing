@@ -263,13 +263,24 @@ def make_yellow_report_df(report_type):
       with open(template_file, 'r') as template:
          for line in template:
             line = line.strip("\n")
-            for i in range(1, df_shape[0]):
-               if line == test_data_df.iloc[i, 0]:
-                  name = f"{test_data_df.iloc[i, 0]}"
-                  unit = f"[{test_data_df.iloc[i, 1]}]"
-                  parameter = TestValue(name=f"{name} {unit}", coordinate=i, val=0)
-                  rep["headers"].append(f"{name} {unit}")
-                  rep["averaged_results"][parameter.name] = parameter
+            if ' AS ' in line :
+               names = line.split(' AS ')
+               new_name = names[1]
+               query = names[0]
+               for i in range(1, df_shape[0]):
+                  if query == test_data_df.iloc[i, 0]:
+                     unit = f"[{test_data_df.iloc[i, 1]}]"
+                     parameter = TestValue(name=f"{new_name} {unit}", coordinate=i, val=0)
+                     rep["headers"].append(f"{new_name} {unit}")
+                     rep["averaged_results"][parameter.name] = parameter
+            else:
+               for i in range(1, df_shape[0]):
+                  if line == test_data_df.iloc[i, 0]:
+                     name = f"{test_data_df.iloc[i, 0]}"
+                     unit = f"[{test_data_df.iloc[i, 1]}]"
+                     parameter = TestValue(name=f"{name} {unit}", coordinate=i, val=0)
+                     rep["headers"].append(f"{name} {unit}")
+                     rep["averaged_results"][parameter.name] = parameter
       return rep
 
 def make_report_df():

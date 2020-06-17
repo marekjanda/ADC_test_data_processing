@@ -227,6 +227,7 @@ def make_F5_report_df(report_type):
       return rep
 
 def make_yellow_report_df(report_type):
+   # Standard report
    if report_type == 'standard':
       # 'Conditions' not available in yellow rig test data
       rep = {'headers': ["Logs", "f [Hz]", "PR", "VR", f"SG [{chr(176)}C]", f"DG [{chr(176)}C]", f"SSH [{chr(176)}C]", "Duty [kW]", "Flow rate [m3/h]", "IE [%]", "VE [%]", "COP [-]"],
@@ -244,6 +245,7 @@ def make_yellow_report_df(report_type):
                 "VE [%]": TestValue(name="VE [%]", coordinate=45, val=0),                          #averaged_results["VE"] += float(results.loc[45, log])
                 "COP [-]": TestValue(name="COP [-]", coordinate=62, val=0)}}                        #averaged_results["COP"] += float(results.loc[62, log])
       return rep
+   # Custom report
    elif report_type == 'custom':
       rep = {'headers': ["Logs"], 'averaged_results': {"Logs": ""}}
       selection = param_list.curselection()
@@ -254,6 +256,7 @@ def make_yellow_report_df(report_type):
          rep["headers"].append(header)
          rep["averaged_results"][parameter.name] = parameter
       return rep
+   # Report from Template
    elif report_type == 'template':
       test_results = ent1.get()
       rep = {'headers': ["Logs"], 'averaged_results': {"Logs": ""}}

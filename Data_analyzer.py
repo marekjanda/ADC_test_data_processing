@@ -60,9 +60,15 @@ R3 = Radiobutton(rep_group, text="Standard", variable=repVals, value='standard')
 R3.grid(row=6, column=1, padx=10, pady=10, sticky=W)
 R4 = Radiobutton(rep_group, text="Custom", variable=repVals, value='custom', command = lambda:custom_report())
 R4.grid(row=6, column=2, padx=10, pady=10, sticky=W)
-R5 = Radiobutton(rep_group, text="From Template", variable=repVals, value='template')
+R5 = Radiobutton(rep_group, text="From Template", variable=repVals, value='template', command = lambda:template_report())
 R5.grid(row=6, column=3, padx=10, pady=10, sticky=W)
 
+# Define button styling
+style = Style()
+style.map("C.TButton",
+    foreground=[('pressed', 'red'), ('active', 'blue')],
+    background=[('pressed', '!disabled', 'black'), ('active', 'white')]
+    ) 
 
 # Set relative path to test log and logsheet
 #xls_path = "LOGall-fullycond.xls"
@@ -103,10 +109,12 @@ def open_results():
    if results_sheet is not None:       
       ent1.insert(END, results_sheet)
  
-#print(results_sheet)     
-
-#results = pd.read_excel(file)
-#print(results.head())
+def open_template():
+   if ent4:
+      ent4.delete(0, END)
+   template = askopenfilename(filetypes =[("all files","*.*")])
+   with open(template,'r') as testlog:
+      ent4.insert(END, template)
 
 def open_logsheet():
    ent2.delete(0, END)
@@ -155,7 +163,6 @@ def custom_report():
    global param_list
    param_list = Listbox(rep_group, selectmode = "multiple", yscrollcommand = yscrollbar.set)
       
-      
    # Widget expands horizontally and  
    # vertically by assigning both to 
    # fill option 
@@ -164,6 +171,27 @@ def custom_report():
       param_list.insert(END, possible_headers[h]["param"])
    # Attach listbox to vertical scrollbar 
    yscrollbar.config(command = param_list.yview) 
+
+# Function to get UI for stan
+def template_report():
+   if rig.get() =='F5':
+      # Load params based on F5 test data format
+      possible_headers = {}
+      report_format = {'headers': [], 'averaged_results': {}}
+   elif rig.get() =='yellow':
+      # Load params based on F5 test data format
+      possible_headers = {}
+      report_format = {'headers': [], 'averaged_results': {}}
+   global ent4
+   ent4 = Entry(rep_group, font=40)
+   ent4.grid(row=7, column=0, padx = 10, pady = 10, rowspan=1, columnspan=4, sticky=W+E+N+S)   
+
+   # Define button to select log sheet
+   template_btn = Button(rep_group, text ='Browse', style="C.TButton", command = lambda:open_template())
+   template_btn.grid(row=7,column=4, padx=10, pady=10)
+
+   
+   
 
 # Define function to get parameters from the test data and creat report dataframe
 def make_F5_report_df(report_type):   
@@ -227,7 +255,21 @@ def make_yellow_report_df(report_type):
          rep["averaged_results"][parameter.name] = parameter
       return rep
    elif report_type == 'template':
-      rep = {'status': 'Comming Soon'}
+      test_results = ent1.get()
+      rep = {'headers': ["Logs"], 'averaged_results': {"Logs": ""}}
+      test_data_df = pd.read_csv(test_results, encoding='latin1') 
+      df_shape = test_data_df.shape
+      template_file = ent4.get()
+      with open(template_file, 'r') as template:
+         for line in template:
+            line = line.strip("\n")
+            for i in range(1, df_shape[0]):
+               if line == test_data_df.iloc[i, 0]:
+                  name = f"{test_data_df.iloc[i, 0]}"
+                  unit = f"[{test_data_df.iloc[i, 1]}]"
+                  parameter = TestValue(name=f"{name} {unit}", coordinate=i, val=0)
+                  rep["headers"].append(f"{name} {unit}")
+                  rep["averaged_results"][parameter.name] = parameter
       return rep
 
 def make_report_df():
@@ -343,7 +385,6 @@ def make_yellow_report():
                if key != "Logs":
                   param = averaged_results[key]
                   coordinate = int(param.coordinate)
-                  print(key)
                   if key in string_keys:
                      averaged_results[key].val = results.loc[coordinate, log]
                   else:
@@ -386,13 +427,6 @@ def make_report():
    elif detected_rig == "yellow":
       make_yellow_report()
    return
-
-# Define button styling
-style = Style()
-style.map("C.TButton",
-    foreground=[('pressed', 'red'), ('active', 'blue')],
-    background=[('pressed', '!disabled', 'black'), ('active', 'white')]
-    ) 
 
 # Define button to select test data
 test_data_btn = Button(path_group, text ='Select test data', style="C.TButton", command = lambda:open_results()) 

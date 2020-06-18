@@ -223,7 +223,38 @@ def make_F5_report_df(report_type):
          rep["averaged_results"][parameter.name] = parameter
       return rep
    elif report_type == 'template':
-      rep = {'status': 'Comming Soon'}
+      test_results = ent1.get()
+      rep = {'headers': ["Logs"], 'averaged_results': {"Logs": ""}}
+      test_data_df =pd.read_excel(test_results, encoding='latin1')
+      df_shape = test_data_df.shape
+      template_file = ent4.get()
+      with open(template_file, 'r') as template:
+         for line in template:
+            line = line.strip("\n")
+            if ' AS ' in line :
+               names = line.split(' AS ')
+               new_name = names[1]
+               query = names[0]
+               print(f"{line} new name")
+               for i in range(1, df_shape[0]):
+                  if query == test_data_df.iloc[i, 0]:
+                     unit = f"[{test_data_df.iloc[i, 1]}]"
+                     parameter = TestValue(name=f"{new_name} {unit}", coordinate=i, val=0)
+                     rep["headers"].append(f"{new_name} {unit}")
+                     rep["averaged_results"][parameter.name] = parameter
+                     break
+            else:
+               for i in range(1, df_shape[0]):
+                  if line == test_data_df.iloc[i, 0]:
+                     if type(test_data_df.iloc[i, 1]) == float:
+                        unit = "[-]"
+                     else:
+                        unit = f"[{test_data_df.iloc[i, 1]}]"
+                     name = f"{test_data_df.iloc[i, 0]}"                     
+                     parameter = TestValue(name=f"{name} {unit}", coordinate=i, val=0)
+                     rep["headers"].append(f"{name} {unit}")
+                     rep["averaged_results"][parameter.name] = parameter
+                     break
       return rep
 
 def make_yellow_report_df(report_type):
@@ -276,6 +307,7 @@ def make_yellow_report_df(report_type):
                      parameter = TestValue(name=f"{new_name} {unit}", coordinate=i, val=0)
                      rep["headers"].append(f"{new_name} {unit}")
                      rep["averaged_results"][parameter.name] = parameter
+                     break
             else:
                for i in range(1, df_shape[0]):
                   if line == test_data_df.iloc[i, 0]:
@@ -284,6 +316,7 @@ def make_yellow_report_df(report_type):
                      parameter = TestValue(name=f"{name} {unit}", coordinate=i, val=0)
                      rep["headers"].append(f"{name} {unit}")
                      rep["averaged_results"][parameter.name] = parameter
+                     break
       return rep
 
 def make_report_df():

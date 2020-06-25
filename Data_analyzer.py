@@ -69,6 +69,26 @@ style.map("C.TButton",
     background=[('pressed', '!disabled', 'black'), ('active', 'white')]
     ) 
 
+# Define button to select test data
+test_data_btn = Button(path_group, text ='Select test data', style="C.TButton", command = lambda:open_results()) 
+test_data_btn.grid(row=1,column=3, padx=10, pady=10)
+
+# Define button to select log sheet
+logsheet_btn = Button(path_group, text ='Select Logsheet', style="C.TButton", command = lambda:open_logsheet())
+logsheet_btn.grid(row=2,column=3, padx=10, pady=10)
+
+# Define button to select report destination folder
+report_dest_btn = Button(path_group, text='Browse', style="C.TButton", command = lambda:select_report_destination())
+report_dest_btn.grid(row=3, column=3, padx=10, pady=10)
+
+# Define button to generate the report
+make_btn = Button(root, text ='Make report', style="C.TButton", command = lambda:make_report())
+make_btn.grid(row=8,column=1, padx=10, pady=10, sticky=W)
+
+# Define button to close/terminate the program
+cancel_btn = Button(root, text="Close", style="C.TButton", command = lambda:close_window())
+cancel_btn.grid(row=8, column=3, padx=10, pady=10, sticky=W)
+
 def select_report_destination():
    # First delete exsiting entry (if there is existing entry)
    ent3.delete(0, END)
@@ -459,24 +479,6 @@ def make_report():
       make_yellow_report()
    return
 
-# Define button to select test data
-test_data_btn = Button(path_group, text ='Select test data', style="C.TButton", command = lambda:open_results()) 
-test_data_btn.grid(row=1,column=3, padx=10, pady=10)
 
-# Define button to select log sheet
-logsheet_btn = Button(path_group, text ='Select Logsheet', style="C.TButton", command = lambda:open_logsheet())
-logsheet_btn.grid(row=2,column=3, padx=10, pady=10)
-
-# Define button to select report destination folder
-report_dest_btn = Button(path_group, text='Browse', style="C.TButton", command = lambda:select_report_destination())
-report_dest_btn.grid(row=3, column=3, padx=10, pady=10)
-
-# Define button to generate the report
-make_btn = Button(root, text ='Make report', style="C.TButton", command = lambda:make_report())
-make_btn.grid(row=8,column=1, padx=10, pady=10, sticky=W)
-
-# Define button to close/terminate the program
-cancel_btn = Button(root, text="Close", style="C.TButton", command = lambda:close_window())
-cancel_btn.grid(row=8, column=3, padx=10, pady=10, sticky=W)
-
+# Mainloop
 mainloop() 
